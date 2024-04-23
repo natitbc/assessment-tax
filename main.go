@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -70,21 +71,20 @@ func getUsersHandler(c echo.Context) error {
 func main() {
 	e := echo.New()
 
-	//Set up environment variables
-	envVars := map[string]string{
-		"PORT":         "8080",
-		"DATABASE_URL": "host={REPLACE_ME} port=5432 ADMIN_USERNAME={adminTax} ADMIN_PASSWORD={admin!} dbname={45678} sslmode=disable",
+	// Load environment variables from .env file
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading environment variables:", err)
 	}
 
-	for name, value := range envVars {
-		err := os.Setenv(name, value)
-		if err != nil {
-			fmt.Printf("Failed to set env var %s: %s\n", name, err)
-		}
-	}
+	// Use os.Getenv to access environment variables
+	adminUsername := os.Getenv("ADMIN_USERNAME")
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+
+	fmt.Println(os.Getenv("ADMIN_USERNAME"))
 
 	e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
-		if username == os.Getenv("ADMIN_USERNAME") || os.Getenv("ADMIN_PASSWORD") == password {
+		if username == adminUsername && password == adminPassword {
 			return true, nil
 		}
 		return false, nil
