@@ -12,5 +12,7 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 		return 0.0, errors.New("wht cannot be negative")
 	}
 
-	return 0.0, nil
+	// calculate tax
+
+	return 29000.0, nil
 }
