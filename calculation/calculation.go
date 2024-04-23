@@ -13,6 +13,9 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 	}
 
 	// calculate tax
+	if (totalIncome - wht) <= 150000.0 {
+		return 0.0, nil
+	}
 
 	return 29000.0, nil
 }
