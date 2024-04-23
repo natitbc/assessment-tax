@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -69,8 +70,21 @@ func getUsersHandler(c echo.Context) error {
 func main() {
 	e := echo.New()
 
+	//Set up environment variables
+	envVars := map[string]string{
+		"PORT":         "8080",
+		"DATABASE_URL": "host={REPLACE_ME} port=5432 ADMIN_USERNAME={adminTax} ADMIN_PASSWORD={admin!} dbname={45678} sslmode=disable",
+	}
+
+	for name, value := range envVars {
+		err := os.Setenv(name, value)
+		if err != nil {
+			fmt.Printf("Failed to set env var %s: %s\n", name, err)
+		}
+	}
+
 	e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
-		if username == "apidesign" || password == "45678" {
+		if username == os.Getenv("ADMIN_USERNAME") || os.Getenv("ADMIN_PASSWORD") == password {
 			return true, nil
 		}
 		return false, nil
