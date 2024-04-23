@@ -15,6 +15,17 @@ type Tax struct {
 	Tax float64 `json:"tax"`
 }
 
+type userData struct {
+	TotalIncome float64     `json:"totalIncome"`
+	Wht         float64     `json:"wht"`
+	Allowances  []Allowance `json:"allowances"`
+}
+
+type Allowance struct {
+	AllowanceType string  `json:"allowanceType"`
+	Amount        float64 `json:"amount"`
+}
+
 type Err struct {
 	Message string `json:"message"`
 }
@@ -24,14 +35,15 @@ var tax = []Tax{
 }
 
 func createTaxHandler(c echo.Context) error {
-	t := Tax{}
-	err := c.Bind(&t)
+	var data userData
+
+	err := c.Bind(&data)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
 	}
-	tax = append(tax, t)
-	fmt.Println("id : % #v\n", t)
-	return c.JSON(http.StatusCreated, t)
+
+	fmt.Println("tax data : % #v\n", data)
+	return c.JSON(http.StatusCreated, data)
 }
 
 func getTaxHandler(c echo.Context) error {
@@ -64,8 +76,8 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	e.POST("/tax", createTaxHandler)
-	e.GET("/tax", getTaxHandler)
+	e.POST("/tax/calculation", createTaxHandler)
+	e.GET("/tax/calculation", getTaxHandler)
 
 	log.Fatal(e.Start(":8080"))
 }
