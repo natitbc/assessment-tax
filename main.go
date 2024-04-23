@@ -9,10 +9,19 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	// "github.com/natitbc/assessment-tax/calculation"
+	"github.com/natitbc/assessment-tax/calculation"
 )
 
 type Tax struct {
 	Tax float64 `json:"tax"`
+	// err error
+}
+
+type Allowance struct {
+	AllowanceType string  `json:"allowanceType"`
+	Amount        float64 `json:"amount"`
 }
 
 type userData struct {
@@ -21,17 +30,12 @@ type userData struct {
 	Allowances  []Allowance `json:"allowances"`
 }
 
-type Allowance struct {
-	AllowanceType string  `json:"allowanceType"`
-	Amount        float64 `json:"amount"`
-}
-
 type Err struct {
 	Message string `json:"message"`
 }
 
-var tax = []Tax{
-	{Tax: 29000.0},
+var responseTax = []Tax{
+	{Tax: 0.0},
 }
 
 func createTaxHandler(c echo.Context) error {
@@ -41,18 +45,30 @@ func createTaxHandler(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
 	}
+	totalincome := data.TotalIncome
+	wht := data.Wht
+	allowancesdata := data.Allowances
+	fmt.Println(totalincome, wht, allowancesdata)
 
-	fmt.Println("tax data : % #v\n", data)
-	return c.JSON(http.StatusCreated, data)
+	tax, _ := calculation.CalculateTax(totalincome, wht, []calculation.Allowance{
+		{AllowanceType: "donation", Amount: allowancesdata[0].Amount},
+	})
+	responseTax[0].Tax = tax
+	// tax, err = calculation.CalculateTax(totalincome, wht, allowances)
+	fmt.Println("tax data : ", tax)
+	return c.JSON(http.StatusCreated, responseTax)
 }
 
 func getTaxHandler(c echo.Context) error {
-	fmt.Print("tax : % #v\n", tax)
-	return c.JSON(http.StatusOK, tax)
+	fmt.Print("tax : % #v\n", responseTax)
+	return c.JSON(http.StatusOK, responseTax)
 }
 
 func main() {
 	e := echo.New()
+
+	// testtax := calculation.CalculateTax(500000.0, 0.0, []Allowance{})
+	// fmt.Println(testtax)
 
 	// Load environment variables from .env file
 	err := godotenv.Load(".env")
