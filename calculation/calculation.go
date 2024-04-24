@@ -12,14 +12,26 @@ type Allowance struct {
 
 func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (float64, error) {
 	// extract allowance
+	var donation float64
+
+	for _, allowance := range allowances {
+		if allowance.AllowanceType == "donation" {
+			donation = allowance.Amount
+			break
+		}
+	}
 
 	PERSONAL_ALLOWANCE := 60000.0
+
+	if donation > 100000.0 {
+		donation = 100000.0
+	}
 
 	if wht < 0.0 {
 		return 0.0, errors.New("wht cannot be negative")
 	}
 
-	incomeAfterAllowance := totalIncome - PERSONAL_ALLOWANCE
+	incomeAfterAllowance := totalIncome - PERSONAL_ALLOWANCE - donation
 
 	// calculate tax
 	if (incomeAfterAllowance) <= 150000.0 {
@@ -35,5 +47,5 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 		return roundedTax, nil
 	}
 
-	return incomeAfterAllowance, nil
+	return 0.0, nil
 }
