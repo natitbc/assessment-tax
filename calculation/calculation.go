@@ -12,8 +12,8 @@ type Allowance struct {
 }
 
 type TaxLevel struct {
-	level string
-	tax   float64
+	Level string
+	Tax   float64
 }
 
 func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (float64, []TaxLevel, error) {
@@ -22,11 +22,11 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 	var kReceipt float64
 
 	TaxLevels := []TaxLevel{
-		{level: "0-150,000", tax: 0.0},
-		{level: "150,001-500,000", tax: 0.0},
-		{level: "500,001-1,000,000", tax: 0.0},
-		{level: "1,000,001-2,000,000", tax: 0.0},
-		{level: "2,000,001 ขึ้นไป", tax: 0.0},
+		{Level: "0-150,000", Tax: 0.0},
+		{Level: "150,001-500,000", Tax: 0.0},
+		{Level: "500,001-1,000,000", Tax: 0.0},
+		{Level: "1,000,001-2,000,000", Tax: 0.0},
+		{Level: "2,000,001 ขึ้นไป", Tax: 0.0},
 	}
 
 	for _, allowance := range allowances {
@@ -73,7 +73,7 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 		unpaidTax := (incomeAfterAllowanceStep1 * 0.1) - wht
 		fmt.Println(unpaidTax)
 		roundedTax := math.Trunc(unpaidTax*1e10) / 1e10
-		TaxLevels[1].tax = roundedTax
+		TaxLevels[1].Tax = roundedTax
 
 		fmt.Println(TaxLevels)
 		return roundedTax, TaxLevels, nil
