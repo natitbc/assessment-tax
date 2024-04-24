@@ -45,4 +45,13 @@ func TestCalculation(t *testing.T) {
 		t.Errorf("Expected %f, got %f", want, got)
 	}
 
+	want = 14000.0
+	got, _ = CalculateTax(500000.0, 0.0, []Allowance{
+		{AllowanceType: "k-receipt", Amount: 200000.0},
+		{AllowanceType: "donation", Amount: 100000.0},
+	})
+	if math.Abs(got-want) > epsilon {
+		t.Errorf("Expected %f, got %f", want, got)
+	}
+
 }
