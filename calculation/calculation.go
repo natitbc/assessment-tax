@@ -62,6 +62,7 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 
 	// calculate tax
 	if (incomeAfterAllowance) <= 150000.0 {
+
 		return 0.0, TaxLevels, nil
 	}
 
@@ -72,6 +73,9 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 		unpaidTax := (incomeAfterAllowanceStep1 * 0.1) - wht
 		fmt.Println(unpaidTax)
 		roundedTax := math.Trunc(unpaidTax*1e10) / 1e10
+		TaxLevels[1].tax = roundedTax
+
+		fmt.Println(TaxLevels)
 		return roundedTax, TaxLevels, nil
 	}
 

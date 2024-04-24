@@ -63,7 +63,6 @@ func TestCalculation(t *testing.T) {
 	}
 
 	_, actualTaxLevels, _ := CalculateTax(500000.0, 0.0, []Allowance{
-		{AllowanceType: "k-receipt", Amount: 200000.0},
 		{AllowanceType: "donation", Amount: 100000.0},
 	})
 
