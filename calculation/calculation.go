@@ -2,6 +2,7 @@ package calculation
 
 import (
 	"errors"
+	"fmt"
 	"math"
 )
 
@@ -12,6 +13,17 @@ type Allowance struct {
 
 func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (float64, error) {
 	// extract allowance
+	fmt.Printf("allowances : %v\n", allowances)
+	//loop get allowance data
+	var donation float64
+
+	for _, allowance := range allowances {
+		if allowance.AllowanceType == "donation" {
+			donation = allowance.Amount
+			break
+		}
+	}
+	fmt.Printf("donation : %v\n", donation)
 
 	PERSONAL_ALLOWANCE := 60000.0
 
@@ -35,5 +47,5 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 		return roundedTax, nil
 	}
 
-	return incomeAfterAllowance, nil
+	return 0.0, nil
 }
