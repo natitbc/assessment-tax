@@ -14,14 +14,14 @@ import (
 	"github.com/natitbc/assessment-tax/calculation"
 )
 
-type Tax struct {
-	Tax float64 `json:"tax"`
-	// err error
-}
-
 type TaxLevel struct {
-	Level  string  `json:"level"`
-	Amount float64 `json:"amount"`
+	level string
+	tax   float64
+}
+type Tax struct {
+	Tax      float64    `json:"tax"`
+	TaxLevel []TaxLevel `json:"taxLevel"`
+	// err error
 }
 
 type Allowance struct {
@@ -40,7 +40,16 @@ type Err struct {
 }
 
 var responseTax = []Tax{
-	{Tax: 0.0},
+	{
+		Tax: 0.0,
+		TaxLevel: []TaxLevel{
+			{level: "0-150,000", tax: 0.0},
+			{level: "150,001-500,000", tax: 0.0},
+			{level: "500,001-1,000,000", tax: 0.0},
+			{level: "1,000,001-2,000,000", tax: 0.0},
+			{level: "2,000,001 ขึ้นไป", tax: 0.0},
+		},
+	},
 }
 
 func createTaxHandler(c echo.Context) error {
@@ -55,13 +64,21 @@ func createTaxHandler(c echo.Context) error {
 	allowancesdata := data.Allowances
 	fmt.Println(totalincome, wht, allowancesdata)
 
-	tax, _, _ := calculation.CalculateTax(totalincome, wht, []calculation.Allowance{
+	tax, CalculatedTaxLevel, _ := calculation.CalculateTax(totalincome, wht, []calculation.Allowance{
 		{AllowanceType: "donation", Amount: allowancesdata[0].Amount},
 	})
 	responseTax[0].Tax = tax
-	// tax, err = calculation.CalculateTax(totalincome, wht, allowances)
+	fmt.Println("--CalculatedTaxLevel : ", CalculatedTaxLevel)
+
+	for i := 0; i < len(CalculatedTaxLevel); i++ {
+		// fmt.Println("TaxLevel : ", CalculatedTaxLevel[i].Tax)
+		responseTax[0].TaxLevel[i].tax = CalculatedTaxLevel[i].Tax
+	}
+	fmt.Println("responseTax : ", responseTax)
+
 	fmt.Println("tax data : ", tax)
-	return c.JSON(http.StatusCreated, responseTax)
+
+	return c.JSON(http.StatusOK, responseTax)
 }
 
 func getTaxHandler(c echo.Context) error {
