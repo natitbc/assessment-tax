@@ -3,6 +3,7 @@ package calculation
 import (
 	"errors"
 	"fmt"
+	"math"
 )
 
 type Allowance struct {
@@ -32,8 +33,10 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 		fmt.Println(incomeAfterAllowanceStep1)
 
 		unpaidTax := (incomeAfterAllowanceStep1 * 0.1) - wht
+		roundedTax := math.Trunc(unpaidTax*1e10) / 1e10
 		fmt.Println(unpaidTax)
-		return unpaidTax, nil
+		fmt.Println(roundedTax)
+		return roundedTax, nil
 	}
 
 	return incomeAfterAllowance, nil
