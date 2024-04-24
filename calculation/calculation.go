@@ -2,7 +2,6 @@ package calculation
 
 import (
 	"errors"
-	"fmt"
 	"math"
 )
 
@@ -30,12 +29,9 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 	incomeAfterAllowanceStep1 := incomeAfterAllowance - 150000.0
 
 	if incomeAfterAllowanceStep1 > 150000.0 && incomeAfterAllowanceStep1 <= 300000.0 {
-		fmt.Println(incomeAfterAllowanceStep1)
 
 		unpaidTax := (incomeAfterAllowanceStep1 * 0.1) - wht
 		roundedTax := math.Trunc(unpaidTax*1e10) / 1e10
-		fmt.Println(unpaidTax)
-		fmt.Println(roundedTax)
 		return roundedTax, nil
 	}
 
