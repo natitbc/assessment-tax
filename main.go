@@ -19,6 +19,11 @@ type Tax struct {
 	// err error
 }
 
+type TaxLevel struct {
+	Level  string  `json:"level"`
+	Amount float64 `json:"amount"`
+}
+
 type Allowance struct {
 	AllowanceType string  `json:"allowanceType"`
 	Amount        float64 `json:"amount"`
@@ -50,7 +55,7 @@ func createTaxHandler(c echo.Context) error {
 	allowancesdata := data.Allowances
 	fmt.Println(totalincome, wht, allowancesdata)
 
-	tax, _ := calculation.CalculateTax(totalincome, wht, []calculation.Allowance{
+	tax, _, _ := calculation.CalculateTax(totalincome, wht, []calculation.Allowance{
 		{AllowanceType: "donation", Amount: allowancesdata[0].Amount},
 	})
 	responseTax[0].Tax = tax
@@ -66,9 +71,6 @@ func getTaxHandler(c echo.Context) error {
 
 func main() {
 	e := echo.New()
-
-	// testtax := calculation.CalculateTax(500000.0, 0.0, []Allowance{})
-	// fmt.Println(testtax)
 
 	// Load environment variables from .env file
 	err := godotenv.Load(".env")
