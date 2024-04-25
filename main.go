@@ -133,22 +133,24 @@ func main() {
 	}
 
 	// Use os.Getenv to access environment variables
-	// adminUsername := os.Getenv("ADMIN_USERNAME")
-	// adminPassword := os.Getenv("ADMIN_PASSWORD")
+	adminUsername := os.Getenv("ADMIN_USERNAME")
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
 
 	// fmt.Println(os.Getenv("ADMIN_USERNAME"))
 
 	e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
-		if username == "adminTax" && password == "admin!" {
+		if username == adminUsername && password == adminPassword {
 			return true, nil
 		}
 		return false, nil
 	}))
 
+	adminGroup := e.Group("/admin")
+
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	e.POST("/admin/deductions/personal", func(c echo.Context) error {
+	adminGroup.POST("/deductions/personal", func(c echo.Context) error {
 		return setDeductionsHandler(c, &calculation.Config{})
 	})
 
