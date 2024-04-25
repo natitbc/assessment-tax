@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
@@ -86,21 +88,39 @@ func getTaxHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, responseTax)
 }
 
-type PersonalDeduction struct {
+type UpdatePersonalDeductionRequest struct {
 	PersonalDeduction float64 `json:"amount"`
 }
 
-func setDeductionsHandler(c echo.Context) error {
-	var data PersonalDeduction
+func setDeductionsHandler(c echo.Context, config *calculation.Config) error {
+	// if isAdmin {
+	// 	return c.JSON(http.StatusUnauthorized, Err{Message: "Unauthorized"})
+	// }
 
-	err := c.Bind(&data)
+	var req UpdatePersonalDeductionRequest
+	err := c.Bind(&req)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
 	}
 
-	personalDeduction := data.PersonalDeduction
+	if req.PersonalDeduction < 0 {
+		return c.JSON(http.StatusBadRequest, Err{Message: "Invalid personal deduction amount"})
+	}
 
-	return c.JSON(http.StatusOK, personalDeduction)
+	config.PersonalDeduction = req.PersonalDeduction
+
+	data, err := json.Marshal(config)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
+	}
+
+	err = os.WriteFile("calculation/config.json", data, 0644)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{"message": "Personal deduction updated successfully"})
+
 }
 
 func main() {
@@ -128,7 +148,9 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	e.POST("/admin/deductions/personal", setDeductionsHandler)
+	e.POST("/admin/deductions/personal", func(c echo.Context) error {
+		return setDeductionsHandler(c, &calculation.Config{})
+	})
 
 	e.POST("/tax/calculation", createTaxHandler)
 	e.GET("/tax/calculation", getTaxHandler)
