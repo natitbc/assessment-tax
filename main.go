@@ -119,7 +119,7 @@ func setDeductionsHandler(c echo.Context, config *calculation.Config) error {
 		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{"message": "Personal deduction updated successfully"})
+	return c.JSON(http.StatusOK, map[string]interface{}{"personalDeduction": req.PersonalDeduction})
 
 }
 
