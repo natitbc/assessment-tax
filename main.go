@@ -83,6 +83,11 @@ func createTaxHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, responseTax)
 }
 
+func multiTaxHandler(c echo.Context) error {
+
+	return c.JSON(http.StatusOK, "multi tax")
+}
+
 func getTaxHandler(c echo.Context) error {
 	fmt.Print("tax : % #v\n", responseTax)
 	return c.JSON(http.StatusOK, responseTax)
@@ -155,6 +160,7 @@ func main() {
 	})
 
 	e.POST("/tax/calculation", createTaxHandler)
+	e.POST("/tax/calculations/upload-csv", multiTaxHandler)
 	e.GET("/tax/calculation", getTaxHandler)
 
 	log.Fatal(e.Start(":8080"))
