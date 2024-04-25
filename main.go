@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -87,6 +88,41 @@ func getTaxHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, responseTax)
 }
 
+type UpdatePersonalDeductionRequest struct {
+	PersonalDeduction float64 `json:"amount"`
+}
+
+func setDeductionsHandler(c echo.Context, config *calculation.Config) error {
+	// if isAdmin {
+	// 	return c.JSON(http.StatusUnauthorized, Err{Message: "Unauthorized"})
+	// }
+
+	var req UpdatePersonalDeductionRequest
+	err := c.Bind(&req)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
+	}
+
+	if req.PersonalDeduction < 0 {
+		return c.JSON(http.StatusBadRequest, Err{Message: "Invalid personal deduction amount"})
+	}
+
+	config.PersonalDeduction = req.PersonalDeduction
+
+	data, err := json.Marshal(config)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
+	}
+
+	err = os.WriteFile("calculation/config.json", data, 0644)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{"personalDeduction": req.PersonalDeduction})
+
+}
+
 func main() {
 	e := echo.New()
 
@@ -100,7 +136,7 @@ func main() {
 	adminUsername := os.Getenv("ADMIN_USERNAME")
 	adminPassword := os.Getenv("ADMIN_PASSWORD")
 
-	fmt.Println(os.Getenv("ADMIN_USERNAME"))
+	// fmt.Println(os.Getenv("ADMIN_USERNAME"))
 
 	e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
 		if username == adminUsername && password == adminPassword {
@@ -109,8 +145,14 @@ func main() {
 		return false, nil
 	}))
 
+	adminGroup := e.Group("/admin")
+
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+
+	adminGroup.POST("/deductions/personal", func(c echo.Context) error {
+		return setDeductionsHandler(c, &calculation.Config{})
+	})
 
 	e.POST("/tax/calculation", createTaxHandler)
 	e.GET("/tax/calculation", getTaxHandler)
