@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
@@ -83,9 +87,115 @@ func createTaxHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, responseTax)
 }
 
+type TaxData struct {
+	TotalIncome float64
+	Wht         float64
+	Allowances  []calculation.Allowance `json:"allowances"`
+}
+
+type TaxResult struct {
+	Tax      float64
+	TaxLevel []calculation.TaxLevel
+}
+
+func CalculateTaxes(data []TaxData) ([]TaxResult, error) {
+	var results []TaxResult
+
+	for _, entry := range data {
+		tax, taxLevel, err := calculation.CalculateTax(entry.TotalIncome, entry.Wht, entry.Allowances)
+		if err != nil {
+			return nil, err
+		}
+		result := TaxResult{
+			Tax:      tax,
+			TaxLevel: taxLevel,
+		}
+		results = append(results, result)
+	}
+	return results, nil
+}
+
+func parseCSV(data []byte, taxData *[]TaxData) error {
+	reader := csv.NewReader(bytes.NewReader(data))
+	records, err := reader.ReadAll()
+	if err != nil {
+		return err
+	}
+
+	// Skip header row (assuming the first row contains headers)
+	headers := records[0]
+	for _, record := range records[1:] {
+		if len(record) != len(headers) {
+			return fmt.Errorf("invalid record length: expected %d, got %d", len(headers), len(record))
+		}
+
+		// Convert record values to TaxData struct
+		var rowData TaxData
+		rowData.TotalIncome, _ = strconv.ParseFloat(record[0], 64)
+		rowData.Wht, _ = strconv.ParseFloat(record[1], 64)
+
+		// Parse allowances (assuming columns 2 onwards contain allowances)
+		rowData.Allowances = make([]calculation.Allowance, 0, len(record)-2) // Pre-allocate slice for allowances
+		for i := 2; i < len(record); i++ {
+			allowanceType := record[i]
+			allowanceAmount, err := strconv.ParseFloat(record[i+1], 64) // Assuming allowance amount follows allowance type
+			if err != nil {
+				return fmt.Errorf("invalid allowance format: %w", err)
+			}
+			rowData.Allowances = append(rowData.Allowances, calculation.Allowance{AllowanceType: allowanceType, Amount: allowanceAmount})
+			i++ // Skip allowance amount after parsing type and amount
+		}
+
+		*taxData = append(*taxData, rowData)
+	}
+
+	return nil
+}
+
 func multiTaxHandler(c echo.Context) error {
 
-	return c.JSON(http.StatusOK, "multi tax")
+	file, err := c.FormFile("taxFile")
+	if err != nil {
+		if err == http.ErrMissingFile {
+			return c.JSON(http.StatusBadRequest, Err{Message: "No file uploaded"})
+		}
+		fmt.Println("Error retrieving uploaded file:", err) // Log error details
+		return c.JSON(http.StatusInternalServerError, Err{Message: "Error retrieving uploaded file"})
+	}
+
+	// If file is uploaded successfully, log some details
+	fmt.Println("Uploaded filename:", file.Filename)
+	fmt.Println("Uploaded file size:", file.Size)
+
+	// Opean uploaded file
+	reader, err := file.Open()
+	fmt.Print("reader :", reader)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Err{Message: "Error opening uploaded file"})
+	}
+	defer reader.Close()
+
+	// read csv data
+	var data bytes.Buffer
+	_, err = io.Copy(&data, reader)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: "Error reading uploaded file"})
+	}
+
+	// Parse CSV
+	var taxData []TaxData
+	err = parseCSV(data.Bytes(), &taxData)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: "Error parsing uploaded file"})
+	}
+
+	// Process tax data
+	results, err := CalculateTaxes([]TaxData{taxData[0]})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: "Error calculating tax"})
+	}
+
+	return c.JSON(http.StatusOK, results)
 }
 
 func getTaxHandler(c echo.Context) error {
