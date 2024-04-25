@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
@@ -87,6 +86,23 @@ func getTaxHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, responseTax)
 }
 
+type PersonalDeduction struct {
+	PersonalDeduction float64 `json:"amount"`
+}
+
+func setDeductionsHandler(c echo.Context) error {
+	var data PersonalDeduction
+
+	err := c.Bind(&data)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
+	}
+
+	personalDeduction := data.PersonalDeduction
+
+	return c.JSON(http.StatusOK, personalDeduction)
+}
+
 func main() {
 	e := echo.New()
 
@@ -97,13 +113,13 @@ func main() {
 	}
 
 	// Use os.Getenv to access environment variables
-	adminUsername := os.Getenv("ADMIN_USERNAME")
-	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	// adminUsername := os.Getenv("ADMIN_USERNAME")
+	// adminPassword := os.Getenv("ADMIN_PASSWORD")
 
-	fmt.Println(os.Getenv("ADMIN_USERNAME"))
+	// fmt.Println(os.Getenv("ADMIN_USERNAME"))
 
 	e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
-		if username == adminUsername && password == adminPassword {
+		if username == "adminTax" && password == "admin!" {
 			return true, nil
 		}
 		return false, nil
@@ -111,6 +127,8 @@ func main() {
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+
+	e.POST("/admin/deductions/personal", setDeductionsHandler)
 
 	e.POST("/tax/calculation", createTaxHandler)
 	e.GET("/tax/calculation", getTaxHandler)
