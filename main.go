@@ -24,6 +24,11 @@ type Tax struct {
 	// err error
 }
 
+type TaxResponse struct {
+	Tax      float64                `json:"tax"`
+	TaxLevel []calculation.TaxLevel `json:"taxLevel"` // Use the actual type from the calculation package
+}
+
 type Allowance struct {
 	AllowanceType string  `json:"allowanceType"`
 	Amount        float64 `json:"amount"`
@@ -62,21 +67,17 @@ func createTaxHandler(c echo.Context) error {
 	totalincome := data.TotalIncome
 	wht := data.Wht
 	allowancesdata := data.Allowances
-	fmt.Println(totalincome, wht, allowancesdata)
+
+	fmt.Print(allowancesdata)
 
 	tax, CalculatedTaxLevel, _ := calculation.CalculateTax(totalincome, wht, []calculation.Allowance{
 		{AllowanceType: "donation", Amount: allowancesdata[0].Amount},
 	})
-	responseTax[0].Tax = tax
-	fmt.Println("--CalculatedTaxLevel : ", CalculatedTaxLevel)
 
-	for i := 0; i < len(CalculatedTaxLevel); i++ {
-		// fmt.Println("TaxLevel : ", CalculatedTaxLevel[i].Tax)
-		responseTax[0].TaxLevel[i].tax = CalculatedTaxLevel[i].Tax
+	responseTax := &TaxResponse{
+		Tax:      tax,
+		TaxLevel: CalculatedTaxLevel,
 	}
-	fmt.Println("responseTax : ", responseTax)
-
-	fmt.Println("tax data : ", tax)
 
 	return c.JSON(http.StatusOK, responseTax)
 }
