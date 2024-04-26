@@ -2,7 +2,6 @@ package calculation
 
 import (
 	"errors"
-	"fmt"
 	"math"
 )
 
@@ -57,8 +56,6 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 	}
 
 	incomeAfterAllowance := totalIncome - PERSONAL_ALLOWANCE - donation - kReceipt
-	fmt.Println("incomeAfterAllowance")
-	fmt.Println(incomeAfterAllowance)
 
 	// calculate tax
 	if (incomeAfterAllowance) <= 150000.0 {
@@ -67,20 +64,16 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 	}
 
 	if incomeAfterAllowance > 150000.0 && incomeAfterAllowance <= 500000.0 {
-		fmt.Print("--level 1--")
 		incomeAfterAllowanceStep1 := incomeAfterAllowance - 150000.0
 
 		unpaidTax := (incomeAfterAllowanceStep1 * 0.1) - wht
-		fmt.Println(unpaidTax)
 		roundedTax := math.Trunc(unpaidTax*1e10) / 1e10
 		TaxLevels[1].Tax = roundedTax
 
-		fmt.Println(TaxLevels)
 		return roundedTax, TaxLevels, nil
 	}
 
 	if incomeAfterAllowance > 500000.0 && incomeAfterAllowance <= 1000000.0 {
-		fmt.Print("--level 2--")
 		incomeAfterAllowanceStep2 := incomeAfterAllowance - 300000.0
 		unpaidTax := (incomeAfterAllowanceStep2 * 0.2) - wht
 		roundedTax := math.Trunc(unpaidTax*1e10) / 1e10

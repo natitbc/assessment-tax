@@ -3,10 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/gocarina/gocsv"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -83,6 +85,94 @@ func createTaxHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, responseTax)
 }
 
+type TaxData struct {
+	TotalIncome float64 `csv:"totalIncome"`
+	Wht         float64 `csv:"wht"`
+	Donation    float64 `csv:"donation"`
+}
+
+type TaxResult struct {
+	TotalIncome float64
+	Tax         float64
+}
+
+func upload(c echo.Context) error {
+	//-----------
+	// Read file
+	//-----------
+
+	// Source
+	file, err := c.FormFile("taxFile")
+	if err != nil {
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	fmt.Println("Successfully opened the CSV file")
+
+	defer src.Close()
+
+	// Destination
+	dst, err := os.Create(file.Filename)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		return err
+	}
+
+	fd, error := os.OpenFile("taxes.csv", os.O_RDWR, 0644)
+
+	if error != nil {
+		fmt.Println(error)
+	}
+
+	fmt.Println("Successfully opened the CSV file")
+	defer fd.Close()
+
+	// read csv data
+	fileBytes, err := os.ReadFile("taxes.csv")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var TaxData []TaxData
+
+	gocsv.UnmarshalBytes(fileBytes, &TaxData)
+	fmt.Println(TaxData)
+
+	var results []TaxResult
+
+	for _, entry := range TaxData {
+		tax, _, err := calculation.CalculateTax(entry.TotalIncome, entry.Wht, []calculation.Allowance{
+			{AllowanceType: "donation", Amount: entry.Donation},
+		})
+		if err != nil {
+			return err
+		}
+		results = append(results, TaxResult{
+			TotalIncome: entry.TotalIncome,
+			Tax:         tax,
+		})
+	}
+
+	fmt.Println(results)
+
+	response := struct {
+		Taxes []TaxResult `json:"taxes"`
+	}{
+		Taxes: results,
+	}
+	fmt.Println(response)
+
+	return c.JSON(http.StatusOK, response)
+}
+
 func getTaxHandler(c echo.Context) error {
 	fmt.Print("tax : % #v\n", responseTax)
 	return c.JSON(http.StatusOK, responseTax)
@@ -93,9 +183,6 @@ type UpdatePersonalDeductionRequest struct {
 }
 
 func setDeductionsHandler(c echo.Context, config *calculation.Config) error {
-	// if isAdmin {
-	// 	return c.JSON(http.StatusUnauthorized, Err{Message: "Unauthorized"})
-	// }
 
 	var req UpdatePersonalDeductionRequest
 	err := c.Bind(&req)
@@ -155,6 +242,7 @@ func main() {
 	})
 
 	e.POST("/tax/calculation", createTaxHandler)
+	e.POST("/tax/calculations/upload-csv", upload)
 	e.GET("/tax/calculation", getTaxHandler)
 
 	log.Fatal(e.Start(":8080"))
