@@ -2,6 +2,7 @@ package calculation
 
 import (
 	"errors"
+	"fmt"
 	"math"
 )
 
@@ -28,6 +29,9 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 		{Level: "2,000,001 ขึ้นไป", Tax: 0.0},
 	}
 
+	PERSONAL_ALLOWANCE := 60000.0
+	kReceipt = 0.0
+
 	for _, allowance := range allowances {
 		if allowance.AllowanceType == "donation" {
 			donation = allowance.Amount
@@ -36,8 +40,6 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 			kReceipt = allowance.Amount
 		}
 	}
-
-	PERSONAL_ALLOWANCE := 60000.0
 
 	if kReceipt < 0.0 {
 		return 0.0, TaxLevels, errors.New("k-receipt cannot be negative")
@@ -56,29 +58,52 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 	}
 
 	incomeAfterAllowance := totalIncome - PERSONAL_ALLOWANCE - donation - kReceipt
+	incomeAfterAllowanceStep1 := incomeAfterAllowance - 150000.0
+	incomeAfterAllowanceStep2 := incomeAfterAllowanceStep1 - 500000.0
+	incomeAfterAllowanceStep3 := incomeAfterAllowanceStep2 - 1000000.0
+	incomeAfterAllowanceStep4 := incomeAfterAllowanceStep3 - 2000000.0
+
+	fmt.Println("------------")
+	fmt.Println("incomeAfterAllowance: ", incomeAfterAllowance)
+	fmt.Println("incomeAfterAllowanceStep1: ", incomeAfterAllowanceStep1)
+
+	totalTax := 0.0
 
 	// calculate tax
 	if (incomeAfterAllowance) <= 150000.0 {
-
 		return 0.0, TaxLevels, nil
 	}
 
-	if incomeAfterAllowance > 150000.0 && incomeAfterAllowance <= 500000.0 {
-		incomeAfterAllowanceStep1 := incomeAfterAllowance - 150000.0
-
+	if incomeAfterAllowanceStep1 > 0 {
 		unpaidTax := (incomeAfterAllowanceStep1 * 0.1) - wht
 		roundedTax := math.Trunc(unpaidTax*1e10) / 1e10
 		TaxLevels[1].Tax = roundedTax
-
-		return roundedTax, TaxLevels, nil
+		totalTax += roundedTax
 	}
 
-	if incomeAfterAllowance > 500000.0 && incomeAfterAllowance <= 1000000.0 {
-		incomeAfterAllowanceStep2 := incomeAfterAllowance - 300000.0
-		unpaidTax := (incomeAfterAllowanceStep2 * 0.2) - wht
+	if incomeAfterAllowanceStep2 > 0 {
+		fmt.Println("incomeAfterAllowanceStep2: ", incomeAfterAllowanceStep2)
+		unpaidTax := (incomeAfterAllowanceStep2 * 0.15) - wht
 		roundedTax := math.Trunc(unpaidTax*1e10) / 1e10
-		return roundedTax, TaxLevels, nil
+		TaxLevels[2].Tax = roundedTax
+		totalTax += roundedTax
 	}
 
-	return 0.0, TaxLevels, nil
+	if incomeAfterAllowanceStep3 > 0 {
+		unpaidTax := (incomeAfterAllowanceStep3 * 0.2) - wht
+		roundedTax := math.Trunc(unpaidTax*1e10) / 1e10
+		TaxLevels[3].Tax = roundedTax
+		totalTax += roundedTax
+	}
+
+	if incomeAfterAllowanceStep4 > 0 {
+		unpaidTax := (incomeAfterAllowanceStep3 * 0.35) - wht
+		roundedTax := math.Trunc(unpaidTax*1e10) / 1e10
+		TaxLevels[4].Tax = roundedTax
+		totalTax += roundedTax
+	}
+
+	roundedTax := math.Trunc(totalTax*1e10) / 1e10
+	return roundedTax, TaxLevels, nil
+
 }
