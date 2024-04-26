@@ -96,25 +96,7 @@ type TaxResult struct {
 	Tax         float64
 }
 
-// func CalculateTaxes(data []TaxData) ([]TaxResult, error) {
-// 	var results []TaxResult
-
-// 	for _, entry := range data {
-// 		tax, taxLevel, err := calculation.CalculateTax(entry.TotalIncome, entry.Wht, entry.Allowances)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		result := TaxResult{
-// 			Tax:      tax,
-// 			TaxLevel: taxLevel,
-// 		}
-// 		results = append(results, result)
-// 	}
-// 	return results, nil
-// }
-
 func upload(c echo.Context) error {
-
 	//-----------
 	// Read file
 	//-----------
@@ -162,7 +144,7 @@ func upload(c echo.Context) error {
 	var TaxData []TaxData
 
 	gocsv.UnmarshalBytes(fileBytes, &TaxData)
-	fmt.Print(TaxData)
+	fmt.Println(TaxData)
 
 	var results []TaxResult
 
@@ -173,15 +155,22 @@ func upload(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		result := TaxResult{
+		results = append(results, TaxResult{
 			TotalIncome: entry.TotalIncome,
 			Tax:         tax,
-		}
-
-		results = append(results, result)
+		})
 	}
 
-	return c.JSON(http.StatusOK, results)
+	fmt.Println(results)
+
+	response := struct {
+		Taxes []TaxResult `json:"taxes"`
+	}{
+		Taxes: results,
+	}
+	fmt.Println(response)
+
+	return c.JSON(http.StatusOK, response)
 }
 
 func getTaxHandler(c echo.Context) error {
@@ -194,9 +183,6 @@ type UpdatePersonalDeductionRequest struct {
 }
 
 func setDeductionsHandler(c echo.Context, config *calculation.Config) error {
-	// if isAdmin {
-	// 	return c.JSON(http.StatusUnauthorized, Err{Message: "Unauthorized"})
-	// }
 
 	var req UpdatePersonalDeductionRequest
 	err := c.Bind(&req)
