@@ -92,8 +92,8 @@ type TaxData struct {
 }
 
 type TaxResult struct {
-	Tax      float64
-	TaxLevel []calculation.TaxLevel
+	TotalIncome float64
+	Tax         float64
 }
 
 // func CalculateTaxes(data []TaxData) ([]TaxResult, error) {
@@ -167,22 +167,17 @@ func upload(c echo.Context) error {
 	var results []TaxResult
 
 	for _, entry := range TaxData {
-		tax, taxLevel, err := calculation.CalculateTax(entry.TotalIncome, entry.Wht, []calculation.Allowance{
+		tax, _, err := calculation.CalculateTax(entry.TotalIncome, entry.Wht, []calculation.Allowance{
 			{AllowanceType: "donation", Amount: entry.Donation},
 		})
 		if err != nil {
 			return err
 		}
 		result := TaxResult{
-			Tax: tax,
-			TaxLevel: []calculation.TaxLevel{
-				{Level: "0-150,000", Tax: taxLevel[0].Tax},
-				{Level: "150,001-500,000", Tax: taxLevel[1].Tax},
-				{Level: "500,001-1,000,000", Tax: taxLevel[2].Tax},
-				{Level: "1,000,001-2,000,000", Tax: taxLevel[3].Tax},
-				{Level: "2,000,001 ขึ้นไป", Tax: taxLevel[4].Tax},
-			},
+			TotalIncome: entry.TotalIncome,
+			Tax:         tax,
 		}
+
 		results = append(results, result)
 	}
 
