@@ -200,9 +200,6 @@ func parseCSV(data []byte, taxData *[]TaxData) error {
 //		return c.JSON(http.StatusOK, results)
 //	}
 func upload(c echo.Context) error {
-	// Read form fields
-	// name := c.FormValue("name")
-	// email := c.FormValue("email")
 
 	//-----------
 	// Read file
@@ -217,6 +214,8 @@ func upload(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("Successfully opened the CSV file")
+
 	defer src.Close()
 
 	// Destination
@@ -231,7 +230,38 @@ func upload(c echo.Context) error {
 		return err
 	}
 
-	return c.HTML(http.StatusOK, fmt.Sprintf("<p>File %s uploaded successfully </p>", file.Filename))
+	fd, error := os.Open("taxes.csv")
+
+	if error != nil {
+		fmt.Println(error)
+	}
+
+	fmt.Println("Successfully opened the CSV file")
+	defer fd.Close()
+
+	// read csv data
+	fileReader := csv.NewReader(fd)
+	records, error := fileReader.ReadAll()
+
+	if error != nil {
+		fmt.Println(error)
+	}
+
+	fmt.Println(records)
+	// 	// Parse CSV
+	// 	var taxData []TaxData
+	// 	err = parseCSV(data.Bytes(), &taxData)
+	// 	if err != nil {
+	// 		return c.JSON(http.StatusInternalServerError, Err{Message: "Error parsing uploaded file"})
+	// 	}
+
+	// 	// Process tax data
+	// 	results, err := CalculateTaxes([]TaxData{taxData[0]})
+	// 	if err != nil {
+	// 		return c.JSON(http.StatusInternalServerError, Err{Message: "Error calculating tax"})
+	// 	}
+
+	return c.JSON(http.StatusOK, records)
 }
 
 func getTaxHandler(c echo.Context) error {
