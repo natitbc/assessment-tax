@@ -87,4 +87,31 @@ func TestCalculation(t *testing.T) {
 		}
 	}
 
+	// case8
+	expectedTaxLevels2 := []TaxLevel{
+		{Level: "0-150,000", Tax: 0.0},
+		{Level: "150,001-500,000", Tax: 14000.0},
+		{Level: "500,001-1,000,000", Tax: 0.0},
+		{Level: "1,000,001-2,000,000", Tax: 0.0},
+		{Level: "2,000,001 ขึ้นไป", Tax: 0.0},
+	}
+
+	_, actualTaxLevels2, _ := CalculateTax(500000.0, 0.0, []Allowance{
+		{AllowanceType: "donation", Amount: 100000.0},
+		{AllowanceType: "k-receipt", Amount: 200000.0},
+	})
+
+	if len(expectedTaxLevels2) != len(actualTaxLevels2) {
+		t.Errorf("Expected %d tax levels, got %d", len(expectedTaxLevels2), len(actualTaxLevels2))
+	}
+
+	for i := 0; i < len(expectedTaxLevels2); i++ {
+		if expectedTaxLevels2[i].Level != actualTaxLevels2[i].Level {
+			t.Errorf("Expected level %s, got %s", expectedTaxLevels2[i].Level, actualTaxLevels2[i].Level)
+		}
+		if math.Abs(expectedTaxLevels2[i].Tax-actualTaxLevels2[i].Tax) > epsilon {
+			t.Errorf("Expected tax %f, got %f", expectedTaxLevels2[i].Tax, actualTaxLevels2[i].Tax)
+		}
+	}
+
 }
