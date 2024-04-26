@@ -93,9 +93,6 @@ type UpdatePersonalDeductionRequest struct {
 }
 
 func setDeductionsHandler(c echo.Context, config *calculation.Config) error {
-	// if isAdmin {
-	// 	return c.JSON(http.StatusUnauthorized, Err{Message: "Unauthorized"})
-	// }
 
 	var req UpdatePersonalDeductionRequest
 	err := c.Bind(&req)
@@ -103,10 +100,14 @@ func setDeductionsHandler(c echo.Context, config *calculation.Config) error {
 		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
 	}
 
-	if req.PersonalDeduction < 0 {
+	if req.PersonalDeduction < 10000 {
 		return c.JSON(http.StatusBadRequest, Err{Message: "Invalid personal deduction amount"})
 	}
 
+	if req.PersonalDeduction > 100000 {
+		return c.JSON(http.StatusBadRequest, Err{Message: "Admin can only set personal deduction up to 100,000"})
+
+	}
 	config.PersonalDeduction = req.PersonalDeduction
 
 	data, err := json.Marshal(config)
@@ -114,7 +115,7 @@ func setDeductionsHandler(c echo.Context, config *calculation.Config) error {
 		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
 	}
 
-	err = os.WriteFile("calculation/config.json", data, 0644)
+	err = os.WriteFile("config.json", data, 0644)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
 	}
