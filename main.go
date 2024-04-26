@@ -86,9 +86,9 @@ func createTaxHandler(c echo.Context) error {
 }
 
 type TaxData struct {
-	TotalIncome string `csv:"totalIncome"`
-	Wht         string `csv:"wht"`
-	Donation    string `csv:"donation"`
+	TotalIncome float64 `csv:"totalIncome"`
+	Wht         float64 `csv:"wht"`
+	Donation    float64 `csv:"donation"`
 }
 
 type TaxResult struct {
