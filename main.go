@@ -76,6 +76,7 @@ func createTaxHandler(c echo.Context) error {
 
 	tax, CalculatedTaxLevel, _ := calculation.CalculateTax(totalincome, wht, []calculation.Allowance{
 		{AllowanceType: "donation", Amount: allowancesdata[0].Amount},
+		{AllowanceType: "k-receipt", Amount: allowancesdata[1].Amount},
 	})
 
 	responseTax := &TaxResponse{
