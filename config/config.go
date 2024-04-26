@@ -1,4 +1,4 @@
-package calculation
+package config
 
 import (
 	"encoding/json"
@@ -12,7 +12,7 @@ type Config struct {
 var config Config
 
 func init() {
-	data, err := os.ReadFile("calculation/config.json")
+	data, err := os.ReadFile("config/config.json")
 	if err != nil {
 		panic(err)
 	}

@@ -13,6 +13,7 @@ import (
 
 	// "github.com/natitbc/assessment-tax/calculation"
 	"github.com/natitbc/assessment-tax/calculation"
+	"github.com/natitbc/assessment-tax/config"
 )
 
 type TaxLevel struct {
@@ -92,7 +93,7 @@ type UpdatePersonalDeductionRequest struct {
 	PersonalDeduction float64 `json:"amount"`
 }
 
-func setDeductionsHandler(c echo.Context, config *calculation.Config) error {
+func setDeductionsHandler(c echo.Context, config *config.Config) error {
 
 	var req UpdatePersonalDeductionRequest
 	err := c.Bind(&req)
@@ -115,7 +116,7 @@ func setDeductionsHandler(c echo.Context, config *calculation.Config) error {
 		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
 	}
 
-	err = os.WriteFile("config.json", data, 0644)
+	err = os.WriteFile("config/config.json", data, 0644)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
 	}
@@ -152,7 +153,7 @@ func main() {
 	e.Use(middleware.Recover())
 
 	adminGroup.POST("/deductions/personal", func(c echo.Context) error {
-		return setDeductionsHandler(c, &calculation.Config{})
+		return setDeductionsHandler(c, &config.Config{})
 	})
 
 	e.POST("/tax/calculation", createTaxHandler)
