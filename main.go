@@ -164,7 +164,29 @@ func upload(c echo.Context) error {
 	gocsv.UnmarshalBytes(fileBytes, &TaxData)
 	fmt.Print(TaxData)
 
-	return c.JSON(http.StatusOK, TaxData)
+	var results []TaxResult
+
+	for _, entry := range TaxData {
+		tax, taxLevel, err := calculation.CalculateTax(entry.TotalIncome, entry.Wht, []calculation.Allowance{
+			{AllowanceType: "donation", Amount: entry.Donation},
+		})
+		if err != nil {
+			return err
+		}
+		result := TaxResult{
+			Tax: tax,
+			TaxLevel: []calculation.TaxLevel{
+				{Level: "0-150,000", Tax: taxLevel[0].Tax},
+				{Level: "150,001-500,000", Tax: taxLevel[1].Tax},
+				{Level: "500,001-1,000,000", Tax: taxLevel[2].Tax},
+				{Level: "1,000,001-2,000,000", Tax: taxLevel[3].Tax},
+				{Level: "2,000,001 ขึ้นไป", Tax: taxLevel[4].Tax},
+			},
+		}
+		results = append(results, result)
+	}
+
+	return c.JSON(http.StatusOK, results)
 }
 
 func getTaxHandler(c echo.Context) error {
