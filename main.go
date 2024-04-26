@@ -152,50 +152,86 @@ func parseCSV(data []byte, taxData *[]TaxData) error {
 	return nil
 }
 
-func multiTaxHandler(c echo.Context) error {
+// func multiTaxHandler(c echo.Context) error {
 
+// 	file, err := c.FormFile("taxFile")
+// 	if err != nil {
+// 		if err == http.ErrMissingFile {
+// 			return c.JSON(http.StatusBadRequest, Err{Message: "No file uploaded"})
+// 		}
+// 		fmt.Println("Error retrieving uploaded file:", err) // Log error details
+// 		return c.JSON(http.StatusInternalServerError, Err{Message: "Error retrieving uploaded file"})
+// 	}
+
+// 	// If file is uploaded successfully, log some details
+// 	fmt.Println("Uploaded filename:", file.Filename)
+// 	fmt.Println("Uploaded file size:", file.Size)
+
+// 	fmt.Print(file)
+
+// 	// Opean uploaded file
+// 	reader, err := file.Open()
+// 	fmt.Print("reader :", reader)
+// 	if err != nil {
+// 		return c.JSON(http.StatusBadRequest, Err{Message: "Error opening uploaded file"})
+// 	}
+// 	defer reader.Close()
+
+// 	// read csv data
+// 	var data bytes.Buffer
+// 	_, err = io.Copy(&data, reader)
+// 	if err != nil {
+// 		return c.JSON(http.StatusInternalServerError, Err{Message: "Error reading uploaded file"})
+// 	}
+
+// 	// Parse CSV
+// 	var taxData []TaxData
+// 	err = parseCSV(data.Bytes(), &taxData)
+// 	if err != nil {
+// 		return c.JSON(http.StatusInternalServerError, Err{Message: "Error parsing uploaded file"})
+// 	}
+
+// 	// Process tax data
+// 	results, err := CalculateTaxes([]TaxData{taxData[0]})
+// 	if err != nil {
+// 		return c.JSON(http.StatusInternalServerError, Err{Message: "Error calculating tax"})
+// 	}
+
+//		return c.JSON(http.StatusOK, results)
+//	}
+func upload(c echo.Context) error {
+	// Read form fields
+	// name := c.FormValue("name")
+	// email := c.FormValue("email")
+
+	//-----------
+	// Read file
+	//-----------
+
+	// Source
 	file, err := c.FormFile("taxFile")
 	if err != nil {
-		if err == http.ErrMissingFile {
-			return c.JSON(http.StatusBadRequest, Err{Message: "No file uploaded"})
-		}
-		fmt.Println("Error retrieving uploaded file:", err) // Log error details
-		return c.JSON(http.StatusInternalServerError, Err{Message: "Error retrieving uploaded file"})
+		return err
 	}
-
-	// If file is uploaded successfully, log some details
-	fmt.Println("Uploaded filename:", file.Filename)
-	fmt.Println("Uploaded file size:", file.Size)
-
-	// Opean uploaded file
-	reader, err := file.Open()
-	fmt.Print("reader :", reader)
+	src, err := file.Open()
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, Err{Message: "Error opening uploaded file"})
+		return err
 	}
-	defer reader.Close()
+	defer src.Close()
 
-	// read csv data
-	var data bytes.Buffer
-	_, err = io.Copy(&data, reader)
+	// Destination
+	dst, err := os.Create(file.Filename)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, Err{Message: "Error reading uploaded file"})
+		return err
+	}
+	defer dst.Close()
+
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		return err
 	}
 
-	// Parse CSV
-	var taxData []TaxData
-	err = parseCSV(data.Bytes(), &taxData)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, Err{Message: "Error parsing uploaded file"})
-	}
-
-	// Process tax data
-	results, err := CalculateTaxes([]TaxData{taxData[0]})
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, Err{Message: "Error calculating tax"})
-	}
-
-	return c.JSON(http.StatusOK, results)
+	return c.HTML(http.StatusOK, fmt.Sprintf("<p>File %s uploaded successfully </p>", file.Filename))
 }
 
 func getTaxHandler(c echo.Context) error {
@@ -270,7 +306,7 @@ func main() {
 	})
 
 	e.POST("/tax/calculation", createTaxHandler)
-	e.POST("/tax/calculations/upload-csv", multiTaxHandler)
+	e.POST("/tax/calculations/upload-csv", upload)
 	e.GET("/tax/calculation", getTaxHandler)
 
 	log.Fatal(e.Start(":8080"))
