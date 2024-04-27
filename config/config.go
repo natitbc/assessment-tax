@@ -7,6 +7,7 @@ import (
 
 type Config struct {
 	PersonalDeduction float64 `json:"personalDeduction"`
+	KReceiptDeduction float64 `json:"kReceiptDeduction"`
 }
 
 var config Config
@@ -25,4 +26,8 @@ func init() {
 
 func SendPersonalDeduction() float64 {
 	return config.PersonalDeduction
+}
+
+func SendKReceiptDeduction() float64 {
+	return config.KReceiptDeduction
 }

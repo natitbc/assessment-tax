@@ -180,27 +180,27 @@ func getTaxHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, responseTax)
 }
 
-type UpdatePersonalDeductionRequest struct {
-	PersonalDeduction float64 `json:"amount"`
+type UpdateKReceiptDeductionRequest struct {
+	KReceiptDeduction float64 `json:"amount"`
 }
 
 func setDeductionsHandler(c echo.Context, config *config.Config) error {
 
-	var req UpdatePersonalDeductionRequest
+	var req UpdateKReceiptDeductionRequest
 	err := c.Bind(&req)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
 	}
 
-	if req.PersonalDeduction < 10000 {
+	if req.KReceiptDeduction < 10000 {
 		return c.JSON(http.StatusBadRequest, Err{Message: "Invalid personal deduction amount"})
 	}
 
-	if req.PersonalDeduction > 100000 {
+	if req.KReceiptDeduction > 100000 {
 		return c.JSON(http.StatusBadRequest, Err{Message: "Admin can only set personal deduction up to 100,000"})
 
 	}
-	config.PersonalDeduction = req.PersonalDeduction
+	config.PersonalDeduction = req.KReceiptDeduction
 
 	data, err := json.Marshal(config)
 	if err != nil {
@@ -212,7 +212,39 @@ func setDeductionsHandler(c echo.Context, config *config.Config) error {
 		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{"personalDeduction": req.PersonalDeduction})
+	return c.JSON(http.StatusOK, map[string]interface{}{"personalDeduction": req.KReceiptDeduction})
+
+}
+
+func setKreceiptDeductionsHandler(c echo.Context, config *config.Config) error {
+
+	var req UpdateKReceiptDeductionRequest
+	err := c.Bind(&req)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
+	}
+
+	if req.KReceiptDeduction < 10000 {
+		return c.JSON(http.StatusBadRequest, Err{Message: "Invalid personal deduction amount"})
+	}
+
+	if req.KReceiptDeduction > 100000 {
+		return c.JSON(http.StatusBadRequest, Err{Message: "Admin can only set personal deduction up to 100,000"})
+
+	}
+	config.KReceiptDeduction = req.KReceiptDeduction
+
+	data, err := json.Marshal(config)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
+	}
+
+	err = os.WriteFile("config/config.json", data, 0644)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{"kReceipt": req.KReceiptDeduction})
 
 }
 
@@ -231,20 +263,31 @@ func main() {
 
 	// fmt.Println(os.Getenv("ADMIN_USERNAME"))
 
-	e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+	// e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+	// 	if username == adminUsername && password == adminPassword {
+	// 		return true, nil
+	// 	}
+	// 	return false, nil
+	// }))
+
+	adminGroup := e.Group("/admin")
+
+	adminGroup.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
 		if username == adminUsername && password == adminPassword {
 			return true, nil
 		}
 		return false, nil
 	}))
 
-	adminGroup := e.Group("/admin")
-
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
 	adminGroup.POST("/deductions/personal", func(c echo.Context) error {
 		return setDeductionsHandler(c, &config.Config{})
+	})
+
+	adminGroup.POST("/deductions/k-receipt", func(c echo.Context) error {
+		return setKreceiptDeductionsHandler(c, &config.Config{})
 	})
 
 	e.POST("/tax/calculation", createTaxHandler)
