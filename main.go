@@ -263,14 +263,21 @@ func main() {
 
 	// fmt.Println(os.Getenv("ADMIN_USERNAME"))
 
-	e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+	// e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+	// 	if username == adminUsername && password == adminPassword {
+	// 		return true, nil
+	// 	}
+	// 	return false, nil
+	// }))
+
+	adminGroup := e.Group("/admin")
+
+	adminGroup.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
 		if username == adminUsername && password == adminPassword {
 			return true, nil
 		}
 		return false, nil
 	}))
-
-	adminGroup := e.Group("/admin")
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
