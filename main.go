@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gocarina/gocsv"
 	"github.com/joho/godotenv"
@@ -298,13 +302,6 @@ func main() {
 
 	// fmt.Println(os.Getenv("ADMIN_USERNAME"))
 
-	// e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
-	// 	if username == adminUsername && password == adminPassword {
-	// 		return true, nil
-	// 	}
-	// 	return false, nil
-	// }))
-
 	adminGroup := e.Group("/admin")
 
 	adminGroup.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
@@ -329,5 +326,36 @@ func main() {
 	e.POST("/tax/calculations/upload-csv", upload)
 	e.GET("/tax/calculation", getTaxHandler)
 
-	log.Fatal(e.Start(":8080"))
+	// Create a server instance with a timeout context for graceful shutdown
+	srv := &http.Server{
+		Addr: ":8080",
+		// Set a reasonable timeout for connections to drain before shutting down
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
+	// Wrap the Echo server with the http.Server instance
+	e.Server = srv
+
+	// Create a channel to receive shutdown signals
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	log.Println("waiting for interrupt signal to stop server")
+	go func() {
+		<-stop
+		log.Println("shutting down the server")
+
+		// Attempt to gracefully shutdown the server
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := e.Server.Shutdown(ctx); err != nil {
+			log.Println("Error during graceful shutdown:", err)
+		}
+		log.Println("Server stopped")
+	}()
+
+	// Start the server
+	log.Fatal(e.StartServer(srv))
+
 }
