@@ -38,6 +38,8 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 
 		} else if allowance.AllowanceType == "k-receipt" {
 			kReceipt = allowance.Amount
+		} else {
+			return 0.0, TaxLevels, errors.New("invalid allowance type")
 		}
 	}
 
@@ -47,6 +49,10 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 
 	if kReceipt >= 50000.0 {
 		kReceipt = 50000.0
+	}
+
+	if donation < 0.0 {
+		return 0.0, TaxLevels, errors.New("donation cannot be negative")
 	}
 
 	if donation >= 100000.0 {
