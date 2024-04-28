@@ -87,7 +87,7 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 
 	if incomeAfterAllowanceStep2 > 0 {
 		fmt.Println("incomeAfterAllowanceStep2: ", incomeAfterAllowanceStep2)
-		unpaidTax := (incomeAfterAllowanceStep2 * 0.15) - wht
+		unpaidTax := (incomeAfterAllowanceStep2 * 0.15)
 		roundedTax := math.Trunc(unpaidTax*1e10) / 1e10
 		TaxLevels[2].Tax = roundedTax
 		totalTax += roundedTax
@@ -95,14 +95,14 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 	}
 
 	if incomeAfterAllowanceStep3 > 0 {
-		unpaidTax := (incomeAfterAllowanceStep3 * 0.2) - wht
+		unpaidTax := (incomeAfterAllowanceStep3 * 0.2)
 		roundedTax := math.Trunc(unpaidTax*1e10) / 1e10
 		TaxLevels[3].Tax = roundedTax
 		totalTax += roundedTax
 	}
 
 	if incomeAfterAllowanceStep4 > 0 {
-		unpaidTax := (incomeAfterAllowanceStep3 * 0.35) - wht
+		unpaidTax := (incomeAfterAllowanceStep3 * 0.35)
 		roundedTax := math.Trunc(unpaidTax*1e10) / 1e10
 		TaxLevels[4].Tax = roundedTax
 		totalTax += roundedTax
