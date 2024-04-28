@@ -56,7 +56,10 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 	if wht < 0.0 {
 		return 0.0, TaxLevels, errors.New("wht cannot be negative")
 	}
-
+	fmt.Println("------Conditions------")
+	fmt.Println("totalIncome: ", totalIncome)
+	fmt.Println("wht: ", wht)
+	fmt.Println("PERSONAL_ALLOWANCE: ", PERSONAL_ALLOWANCE)
 	fmt.Println("kReceipt: ", kReceipt)
 	fmt.Println("donation: ", donation)
 
@@ -67,8 +70,6 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 	incomeAfterAllowanceStep4 := incomeAfterAllowanceStep3 - 2000000.0
 
 	fmt.Println("------------")
-	fmt.Println("incomeAfterAllowance: ", incomeAfterAllowance)
-	fmt.Println("incomeAfterAllowanceStep1: ", incomeAfterAllowanceStep1)
 
 	totalTax := 0.0
 
@@ -78,7 +79,7 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 	}
 
 	if incomeAfterAllowanceStep1 > 0 {
-		unpaidTax := (incomeAfterAllowanceStep1 * 0.1) - wht
+		unpaidTax := (incomeAfterAllowanceStep1 * 0.1)
 		roundedTax := math.Trunc(unpaidTax*1e10) / 1e10
 		TaxLevels[1].Tax = roundedTax
 		totalTax += roundedTax
@@ -109,6 +110,14 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 	}
 
 	roundedTax := math.Trunc(totalTax*1e10) / 1e10
+	roundedTax = roundedTax - wht
+
+	fmt.Println("+++++++++++")
+	fmt.Println("roundedTax: ", roundedTax)
+	fmt.Println("totalTax: ", totalTax)
+	fmt.Println("wht: ", wht)
+	fmt.Println("TaxLevel: ", TaxLevels)
+
 	return roundedTax, TaxLevels, nil
 
 }

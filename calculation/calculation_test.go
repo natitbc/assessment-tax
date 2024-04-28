@@ -1,6 +1,7 @@
 package calculation
 
 import (
+	"fmt"
 	"math"
 	"testing"
 )
@@ -35,7 +36,7 @@ func TestCalculation(t *testing.T) {
 
 	// case4
 	// test got tax 4000.0 when input 500000.0, 25000.0, []
-
+	fmt.Println(">>>>>> Test case 4")
 	want = 4000.0
 	got, _, _ = CalculateTax(500000.0, 25000.0, []Allowance{})
 	if math.Abs(got-want) > epsilon {
