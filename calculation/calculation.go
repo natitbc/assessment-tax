@@ -110,13 +110,13 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 	}
 
 	roundedTax := math.Trunc(totalTax*1e10) / 1e10
+	roundedTax = roundedTax - wht
+
 	fmt.Println("+++++++++++")
 	fmt.Println("roundedTax: ", roundedTax)
 	fmt.Println("totalTax: ", totalTax)
 	fmt.Println("wht: ", wht)
 	fmt.Println("TaxLevel: ", TaxLevels)
-
-	roundedTax = roundedTax - wht
 
 	return roundedTax, TaxLevels, nil
 

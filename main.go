@@ -72,12 +72,31 @@ func createTaxHandler(c echo.Context) error {
 	wht := data.Wht
 	allowancesdata := data.Allowances
 
-	fmt.Print(allowancesdata)
+	var tax float64
+	var CalculatedTaxLevel []calculation.TaxLevel
 
-	tax, CalculatedTaxLevel, _ := calculation.CalculateTax(totalincome, wht, []calculation.Allowance{
-		{AllowanceType: "donation", Amount: allowancesdata[0].Amount},
-		{AllowanceType: "k-receipt", Amount: allowancesdata[1].Amount},
-	})
+	//check has allowancedata[0].AllowanceType
+	if len(allowancesdata) == 0 {
+		fmt.Println("Tax with No allowances")
+		tax, CalculatedTaxLevel, _ = calculation.CalculateTax(totalincome, wht, []calculation.Allowance{})
+
+	} else {
+		fmt.Println("Tax with allowances")
+		countAllowance := len(allowancesdata)
+
+		if countAllowance > 2 {
+			return c.JSON(http.StatusBadRequest, Err{Message: "max 2 allowances"})
+		}
+		for i := 0; i < countAllowance; i++ {
+			if allowancesdata[i].AllowanceType == "donation" || allowancesdata[i].AllowanceType == "k-receipt" {
+				tax, CalculatedTaxLevel, _ = calculation.CalculateTax(totalincome, wht, []calculation.Allowance{
+					{AllowanceType: allowancesdata[i].AllowanceType, Amount: allowancesdata[i].Amount},
+				})
+			} else {
+				return c.JSON(http.StatusBadRequest, Err{Message: "allowanceType must be donation or k-receipt"})
+			}
+		}
+	}
 
 	responseTax := &TaxResponse{
 		Tax:      tax,
