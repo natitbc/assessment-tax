@@ -3,6 +3,7 @@ module github.com/natitbc/assessment-tax
 go 1.21.9
 
 require (
+	github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.11.4
 )
