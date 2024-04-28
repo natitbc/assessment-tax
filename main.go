@@ -76,6 +76,13 @@ func createTaxHandler(c echo.Context) error {
 	var tax float64
 	var CalculatedTaxLevel []calculation.TaxLevel
 
+	if wht < 0 {
+		return c.JSON(http.StatusBadRequest, Err{Message: "wht cannot be negative"})
+	}
+	if wht > totalincome {
+		return c.JSON(http.StatusBadRequest, Err{Message: "wht cannot be greater than total income"})
+	}
+
 	//check has allowancedata[0].AllowanceType
 	if len(allowancesdata) == 0 {
 		fmt.Println("Tax with No allowances")

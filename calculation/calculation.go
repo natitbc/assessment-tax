@@ -56,6 +56,10 @@ func CalculateTax(totalIncome float64, wht float64, allowances []Allowance) (flo
 	if wht < 0.0 {
 		return 0.0, TaxLevels, errors.New("wht cannot be negative")
 	}
+
+	if wht > totalIncome {
+		return 0.0, TaxLevels, errors.New("wht cannot be greater than total income")
+	}
 	fmt.Println("------Conditions------")
 	fmt.Println("totalIncome: ", totalIncome)
 	fmt.Println("wht: ", wht)
