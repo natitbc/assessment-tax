@@ -29,8 +29,9 @@ type Tax struct {
 }
 
 type TaxResponse struct {
-	Tax      float64                `json:"tax"`
-	TaxLevel []calculation.TaxLevel `json:"taxLevel"` // Use the actual type from the calculation package
+	Tax       float64                `json:"tax"`
+	TaxRefund float64                `json:"taxRefund"`
+	TaxLevel  []calculation.TaxLevel `json:"taxLevel"` // Use the actual type from the calculation package
 }
 
 type Allowance struct {
@@ -102,9 +103,15 @@ func createTaxHandler(c echo.Context) error {
 		}
 	}
 
+	TaxRefund := 0.0
+	if tax < 0 {
+		TaxRefund = tax * -1
+	}
+
 	responseTax := &TaxResponse{
-		Tax:      tax,
-		TaxLevel: CalculatedTaxLevel,
+		Tax:       tax,
+		TaxRefund: TaxRefund,
+		TaxLevel:  CalculatedTaxLevel,
 	}
 
 	return c.JSON(http.StatusOK, responseTax)
