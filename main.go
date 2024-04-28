@@ -322,9 +322,9 @@ func main() {
 		return setKreceiptDeductionsHandler(c, &config.Config{})
 	})
 
-	e.POST("/tax/calculation", createTaxHandler)
+	e.POST("/tax/calculations", createTaxHandler)
 	e.POST("/tax/calculations/upload-csv", upload)
-	e.GET("/tax/calculation", getTaxHandler)
+	e.GET("/tax/calculations", getTaxHandler)
 
 	// Create a server instance with a timeout context for graceful shutdown
 	srv := &http.Server{
