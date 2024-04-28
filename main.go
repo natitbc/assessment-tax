@@ -88,6 +88,10 @@ func createTaxHandler(c echo.Context) error {
 			return c.JSON(http.StatusBadRequest, Err{Message: "max 2 allowances"})
 		}
 		for i := 0; i < countAllowance; i++ {
+			if allowancesdata[i].Amount < 0 {
+				return c.JSON(http.StatusBadRequest, Err{Message: "amount must be positive"})
+			}
+
 			if allowancesdata[i].AllowanceType == "donation" || allowancesdata[i].AllowanceType == "k-receipt" {
 				tax, CalculatedTaxLevel, _ = calculation.CalculateTax(totalincome, wht, []calculation.Allowance{
 					{AllowanceType: allowancesdata[i].AllowanceType, Amount: allowancesdata[i].Amount},
