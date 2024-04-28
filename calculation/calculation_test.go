@@ -62,6 +62,20 @@ func TestCalculation(t *testing.T) {
 		t.Errorf("Expected %f, got %f", want, got)
 	}
 
+	// case7 check for negative wht
+	want = 0.0
+	_, _, err = CalculateTax(500000.0, 600000.0, []Allowance{})
+	if err == nil {
+		t.Errorf("Expected error for negative wht, got nil")
+	}
+
+	// case7 check for negative wht
+	want = 0.0
+	_, _, err = CalculateTax(500000.0, -1.0, []Allowance{})
+	if err == nil {
+		t.Errorf("Expected error for negative wht, got nil")
+	}
+
 	// case7
 	expectedTaxLevels := []TaxLevel{
 		{Level: "0-150,000", Tax: 0.0},
