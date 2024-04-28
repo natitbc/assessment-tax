@@ -76,13 +76,6 @@ func createTaxHandler(c echo.Context) error {
 	var tax float64
 	var CalculatedTaxLevel []calculation.TaxLevel
 
-	if wht < 0 {
-		return c.JSON(http.StatusBadRequest, Err{Message: "wht cannot be negative"})
-	}
-	if wht > totalincome {
-		return c.JSON(http.StatusBadRequest, Err{Message: "wht cannot be greater than total income"})
-	}
-
 	//check has allowancedata[0].AllowanceType
 	if len(allowancesdata) == 0 {
 		fmt.Println("Tax with No allowances")
@@ -286,6 +279,11 @@ func setKreceiptDeductionsHandler(c echo.Context, config *config.Config) error {
 }
 
 func main() {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello from your Go application!")
+	})
+	fmt.Println("Server listening on port 8080")
+
 	e := echo.New()
 
 	// Load environment variables from .env file
